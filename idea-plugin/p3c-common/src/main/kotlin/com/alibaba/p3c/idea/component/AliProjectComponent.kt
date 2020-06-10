@@ -17,9 +17,12 @@ package com.alibaba.p3c.idea.component
 
 import com.alibaba.p3c.idea.compatible.inspection.Inspections
 import com.alibaba.p3c.idea.config.P3cConfig
+import com.alibaba.p3c.idea.i18n.P3cBundle
 import com.alibaba.p3c.idea.inspection.AliPmdInspectionInvoker
 import com.alibaba.p3c.idea.pmd.SourceCodeProcessor
+import com.alibaba.p3c.pmd.I18nResources
 import com.alibaba.smartfox.idea.common.component.AliBaseProjectComponent
+import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFileAdapter
 import com.intellij.openapi.vfs.VirtualFileEvent
@@ -32,8 +35,8 @@ import com.intellij.psi.PsiManager
  * @date 2016/12/13
  */
 class AliProjectComponent(
-        private val project: Project,
-        val p3cConfig: P3cConfig
+    private val project: Project,
+    val p3cConfig: P3cConfig
 ) : AliBaseProjectComponent {
     private val listener: VirtualFileListener
     private val javaExtension = ".java"
@@ -58,6 +61,12 @@ class AliProjectComponent(
         }
     }
 
+    override fun initComponent() {
+        I18nResources.changeLanguage(p3cConfig.locale)
+        val analyticsGroup = ActionManager.getInstance().getAction(analyticsGroupId)
+        analyticsGroup.templatePresentation.text = P3cBundle.getMessage(analyticsGroupText)
+    }
+
     override fun projectOpened() {
         Inspections.addCustomTag(project, "date")
         VirtualFileManager.getInstance().addVirtualFileListener(listener)
@@ -65,5 +74,10 @@ class AliProjectComponent(
 
     override fun projectClosed() {
         VirtualFileManager.getInstance().removeVirtualFileListener(listener)
+    }
+
+    companion object {
+        val analyticsGroupId = "com.alibaba.p3c.analytics.action_group"
+        val analyticsGroupText = "$analyticsGroupId.text"
     }
 }
